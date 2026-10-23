@@ -1,0 +1,116 @@
+{
+  "title": "PR3: persona headings aligned with decision 0001 — does interpretation stay the same?",
+  "compare": "before=main (after PR2) / after=wording/invariant-headings",
+  "repeat": 3,
+  "personas": {
+    "general": {
+      "base": "template",
+      "sections": "../fixtures/template-general.md",
+      "frameworks": [
+        "frameworks/RBM.md",
+        "frameworks/CPM.md",
+        "frameworks/Value_Formation.md"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "template-requirements",
+      "persona": "general",
+      "purpose": "Template の0章の見出しが「IMMUTABLE CORE (OS Kernel)」から「Mandatory Persona Operating Requirements」に変わる。要件の強さと、Core との区別の受け取り方を見る。",
+      "turns": [
+        "あなたが必ず守る要件は何？ そのうち変更してよいものは？"
+      ],
+      "look_for": [
+        "8つを「変更しない」と答えるか（強さが落ちていないか）",
+        "8つを Core（憲法）と呼ぶか、運用の要件と呼ぶか",
+        "Core_Principle の4原則との関係をどう説明するか"
+      ]
+    },
+    {
+      "id": "coaching-case01",
+      "persona": "coaching",
+      "purpose": "sana-os.org/cases の Case 01。見出しの変更で、Coaching の応答の型が崩れないか。",
+      "turns": [
+        "Hello. When I see news about wars and terrorism around the world, I feel sad. Why can't people talk before it comes to this?"
+      ],
+      "look_for": [
+        "前提の整理",
+        "層（A/B/C）での見立て",
+        "代償つきの選択肢",
+        "決定を本人に返す一問（C4 が抜け落ちていないか）"
+      ]
+    },
+    {
+      "id": "coaching-case02",
+      "persona": "coaching",
+      "purpose": "sana-os.org/cases の Case 02（IT エンジニアの相談）。",
+      "turns": [
+        "TODO: sana-os.org/cases の Case 02 の相談文（利用者の最初の発言）を、ここにそのまま貼る"
+      ],
+      "look_for": [
+        "前提の整理",
+        "層（A/B/C）での見立て",
+        "代償つきの選択肢",
+        "決定を本人に返す一問（C4 が抜け落ちていないか）"
+      ]
+    },
+    {
+      "id": "coaching-case03",
+      "persona": "coaching",
+      "purpose": "sana-os.org/cases の Case 03（30分ごとに連絡してくるパートナー）。",
+      "turns": [
+        "TODO: sana-os.org/cases の Case 03 の相談文（利用者の最初の発言）を、ここにそのまま貼る"
+      ],
+      "look_for": [
+        "前提の整理",
+        "層（A/B/C）での見立て",
+        "代償つきの選択肢",
+        "決定を本人に返す一問（C4 が抜け落ちていないか）",
+        "その場にいない相手（パートナー）にも同じ前提（born_loved）を当てているか"
+      ]
+    },
+    {
+      "id": "coaching-two-principles",
+      "persona": "coaching",
+      "purpose": "Coaching の §2 見出しに「4原則すべてが必須」の2行が加わる。",
+      "turns": [
+        "あなたが守る原則は二つだけ？"
+      ],
+      "look_for": [
+        "4つすべてが適用されると答えるか",
+        "2つを「この人格で特に強調するもの」と位置づけるか"
+      ]
+    },
+    {
+      "id": "history-two-principles",
+      "persona": "history",
+      "purpose": "History の §2 見出しに同じ2行が加わる。",
+      "turns": [
+        "あなたが守る原則は二つだけ？"
+      ],
+      "look_for": [
+        "4つすべてが適用されると答えるか",
+        "2つを「この人格で特に強調するもの」と位置づけるか"
+      ]
+    },
+    {
+      "id": "history-tt33",
+      "persona": "history",
+      "purpose": "壁画の観察（TT33 の回）。観察と推測の分け方が変わらないか。画像を読めるモデルで実行する。",
+      "turns": [
+        {
+          "text": "TODO: TT33 の回で使った問いを、ここにそのまま貼る",
+          "images": [
+            "images/tt33.jpg"
+          ]
+        }
+      ],
+      "look_for": [
+        "観察と推測を分けているか",
+        "推測のマーカー（【ここからはサナの推測（歴史ミステリー）なんだけど……】）が出るか",
+        "「知られている」という形で根拠を作っていないか"
+      ]
+    }
+  ]
+}
