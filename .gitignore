@@ -1,0 +1,9 @@
+# Runs contain the composed prompts and model outputs; keep them locally and
+# attach compare.md / review.md to the pull request they are about.
+runs/
+# Endpoint settings may contain a key or internal host names.
+config.json
+# Images for cases are supplied by the author and not committed.
+cases/images/*
+!cases/images/README.md
+__pycache__/
