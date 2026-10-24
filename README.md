@@ -59,8 +59,10 @@ python sana_eval.py run --sana-os D:\GitHub\sana-os `
 | `run.json` | 比べたコミット、プロンプトのハッシュと文字数、エンドポイントの設定、日時、試験装置の版 |
 | `prompts\<版>\<ペルソナ>.md` | 実際に送ったシステムプロンプト |
 | `transcripts\<ケース>\<版>-<回>.json` | 送った入力と、応答・終了理由・トークン数・時間 |
-| `compare.md` | ケースごとに、回ごと・版ごとの応答を並べたもの |
-| `review.md` | ケースごとの「見る点」と、回ごとの記入欄 |
+| `cases.snapshot.json` | 実行したときのケースファイルそのもの。レポートはこれから作る |
+| `compare.md` | ケースごとに、回ごと・版ごとの応答を並べたもの。各応答の下に、終了理由（`max_tokens` で切れたかどうか）・トークン数・サーバーが返したモデル名・時間 |
+| `review.template.md` | ケースごとの「見る点」と、回ごとの記入欄（ひな形） |
+| `review.md` | 記入用。最初に一度だけ、ひな形を写して作る。**以後どのコマンドも上書きしない** |
 
 `review.md` に記入して、`compare.md` と一緒に、その変更の PR にコメントとして貼れば、確認の記録が PR に残ります。`runs\` は Git に入れません（SANA OS の原文とモデルの出力をそのまま含むため）。
 
@@ -69,7 +71,9 @@ python sana_eval.py run --sana-os D:\GitHub\sana-os `
 - `--only <ケースID> ...`：一部のケースだけ実行する
 - `--repeat N`：回数をケースファイルの値から変える
 - `python sana_eval.py compose --sana-os ... --ref main --persona history`：一つのペルソナの組み立て結果を表示する（正確な文面を残すときは `--out <ファイル>`。画面への表示では、表示できない文字が置き換わることがあります）
-- `python sana_eval.py report runs\<run>`：`compare.md` と `review.md` を作り直す
+- `python sana_eval.py report runs\<run>`：`compare.md` と `review.template.md` を作り直す（`review.md` はそのまま）
+- `python sana_eval.py report runs\<run> --cases <別のケースファイル> --reason "理由"`：実行時とは別の「見る点」で読み直す（再レビュー）。理由は `run.json` に記録され、`compare.rereview-<日時>.md` と `review.rereview-<日時>.md` に分けて書かれます
+- 接続できないときは、最初の要求で止まります（3回続けて失敗したときも止まります）。理由は `run.json` に残ります
 
 ## ケースファイル
 
