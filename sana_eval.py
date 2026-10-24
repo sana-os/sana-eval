@@ -371,6 +371,22 @@ def run_cases(out: Path, run: dict) -> dict:
     if path.is_file() and sha256(path.read_text(encoding="utf-8")) == run["cases_file"]["sha256"]:
         snap.write_bytes(path.read_bytes())  # unchanged since the run: keep that state from now on
         return json.loads(path.read_text(encoding="utf-8"))
+    # Changed since: look for the version with the recorded hash in this repository's history.
+    rel = run["cases_file"]["path"].replace("\\", "/")
+    try:
+        commits = git(HERE, "log", "--format=%H", "--", rel).split()
+    except Exception:
+        commits = []
+    for commit in commits:
+        try:
+            text = git(HERE, "show", f"{commit}:{rel}")
+        except Exception:
+            continue
+        if sha256(text) == run["cases_file"]["sha256"]:
+            with open(snap, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(text)
+            print(f"cases.snapshot.json recovered from commit {commit[:12]} (hash matches the run)")
+            return json.loads(text)
     raise SystemExit(f"{out} has no cases.snapshot.json, and {path} has changed since the run. "
                      "To read the run with the current cases, use --cases and --reason (a re-review).")
 
