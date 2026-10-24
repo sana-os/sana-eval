@@ -98,7 +98,8 @@ python sana_eval.py run --sana-os D:\GitHub\sana-os `
 - Template から作るペルソナは、`sections` に2〜3章だけを書いたファイルを指定します。`fixtures/template-general.md` は、余計な規則を持たない試験用のペルソナです。0〜1章や Core の変更が、ペルソナ自身の規則に隠されずに応答に出るように、足すものを最小にしてあります
 - `turns` は利用者の発言の台本です。2ターン目以降も、モデルの応答に関係なく台本どおりに送ります
 - 画像を付けるときは `{"text": "...", "images": ["images/tt33.jpg"]}`。パスはケースファイルからの相対パスで、`cases\images\` は Git に入りません
-- `TODO:` で始まる発言があるケースは、実行せずに一覧に出します。sana-os.org/cases の Case 02・03 の相談文と、TT33 の回の問いと画像が、今は `TODO:` です。貼り込めば実行されます
+- `source`（任意）は入力の出典、`reference`（任意）は以前の記録です。どちらも `compare.md` と `review.md` に載ります。`reference` は判定の基準ではありません。比べるのは、変更の前と後です
+- `TODO:` で始まる発言があるケースは、実行せずに一覧に出します。今は TT33 の回の問いと画像が `TODO:` です。貼り込めば実行されます
 
 ## 注意
 

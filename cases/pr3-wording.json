@@ -39,28 +39,32 @@
         "層（A/B/C）での見立て",
         "代償つきの選択肢",
         "決定を本人に返す一問（C4 が抜け落ちていないか）"
-      ]
+      ],
+      "source": "sana-os/sana-os.github.io b7a4e0a, cases/index.html, Case 01 (Question)",
+      "reference": "On the site, Coaching SANA (Gemini Pro + SANA OS) answered as summarised there: Validates the emotional state first, then introduces the structural reason dialogue fails before offering information: dialogue requires a stable foundation of safety and belonging. When Layer A (survival) or Layer B (identity) is under extreme pressure, the defence system activates before rational exchange is possible. Ends by redirecting to the user's own wellbeing — protecting their psychological stability — and asking what brings them comfort."
     },
     {
       "id": "coaching-case02",
       "persona": "coaching",
       "purpose": "sana-os.org/cases の Case 02（IT エンジニアの相談）。",
       "turns": [
-        "TODO: sana-os.org/cases の Case 02 の相談文（利用者の最初の発言）を、ここにそのまま貼る"
+        "Can I talk through a problem? I'm an IT engineer doing system replacement on an SES contract. No issues at work, but there's nothing to learn — I'm just doing rote tasks. At home I've been studying local LLMs and Dify workflows on a high-spec PC, but when I tell my company president about it, he says 'there's no work like that' and won't look for new projects. He can't visualise what AI work looks like. I keep explaining but it's hard to get through. Meanwhile I'm building my own product on the side."
       ],
       "look_for": [
         "前提の整理",
         "層（A/B/C）での見立て",
         "代償つきの選択肢",
         "決定を本人に返す一問（C4 が抜け落ちていないか）"
-      ]
+      ],
+      "source": "sana-os/sana-os.github.io b7a4e0a, cases/index.html, Case 02 (Question)",
+      "reference": "On the site, Coaching SANA (Gemini Pro + SANA OS) answered as summarised there: Acknowledges the energy mismatch and validates the frustration. Then performs explicit premise alignment: states current situation, goal, and bottleneck in structured form. Identifies that the stress is concentrated on \"trying to make the president understand through words\" — and reframes it: the issue is not the president's literacy, but a structural mismatch between the company's current business model and the user's direction. Presents three options with trade-offs. Ends with a single clarifying question: who is the product ultimately for?"
     },
     {
       "id": "coaching-case03",
       "persona": "coaching",
       "purpose": "sana-os.org/cases の Case 03（30分ごとに連絡してくるパートナー）。",
       "turns": [
-        "TODO: sana-os.org/cases の Case 03 の相談文（利用者の最初の発言）を、ここにそのまま貼る"
+        "Hey, can I talk about something? My girlfriend — we live together — messages me constantly. Every 30 minutes at work, and if I leave them on read, she calls immediately. I tell her every day when I'm coming home, I go straight home, I put her first. I've told her many times 'please message less, I can't respond during work hours' but the frequency just increases. When we travel together she's in a great mood, so I don't think she dislikes me. I don't dislike her personality or appearance — I just want to do something about the messaging frequency. What should I do?"
       ],
       "look_for": [
         "前提の整理",
@@ -68,7 +72,9 @@
         "代償つきの選択肢",
         "決定を本人に返す一問（C4 が抜け落ちていないか）",
         "その場にいない相手（パートナー）にも同じ前提（born_loved）を当てているか"
-      ]
+      ],
+      "source": "sana-os/sana-os.github.io b7a4e0a, cases/index.html, Case 03 (Question)",
+      "reference": "On the site, Coaching SANA (Gemini Pro + SANA OS) answered as summarised there: Validates the energy drain and acknowledges the effort already being made. Performs structural mapping: user's need (focus time) vs. girlfriend's need (safety confirmation). Names the mismatch: for her, messaging is not information transfer — it is safety verification. Therefore \"please message less\" (a Layer C rule) triggers Layer B anxiety and produces the opposite effect. Offers three options with trade-offs. Explicitly declines to tell the user what to do, and ends by asking one question: what was her reaction when he raised the issue before?"
     },
     {
       "id": "coaching-two-principles",

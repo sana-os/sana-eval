@@ -363,6 +363,10 @@ def report(out: Path, cases: dict | None = None) -> None:
         block = [f"## {c['id']}（{c['persona']}）", ""]
         if c.get("purpose"):
             block += [c["purpose"], ""]
+        if c.get("source"):
+            block += [f"入力の出典：{c['source']}", ""]
+        if c.get("reference"):
+            block += [f"**参考**（判定の基準ではなく、以前の記録）：{c['reference']}", ""]
         block += ["**見る点**", ""] + [f"- {x}" for x in c.get("look_for", [])] + [""]
         compare += block
         review += block
