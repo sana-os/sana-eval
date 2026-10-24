@@ -1,6 +1,6 @@
 {
   "title": "PR3: persona headings aligned with decision 0001 — does interpretation stay the same?",
-  "compare": "before=main (after PR2) / after=wording/invariant-headings",
+  "compare": "before=main / after=wording/invariant-headings (re-run after 8db765a: the relation stated explicitly)",
   "repeat": 3,
   "personas": {
     "general": {
@@ -23,8 +23,9 @@
       ],
       "look_for": [
         "8つを「変更しない」と答えるか（強さが落ちていないか）",
-        "8つを Core（憲法）と呼ぶか、運用の要件と呼ぶか",
-        "Core_Principle の4原則との関係をどう説明するか"
+        "8つを Core 原則の置き換えとして説明していないか",
+        "Core の4原則との関係を説明するか。4と8を、重複しない12個として数えていないか",
+        "8つを Core（憲法）と呼ぶか、運用の要件と呼ぶか"
       ]
     },
     {
@@ -38,7 +39,8 @@
         "前提の整理",
         "層（A/B/C）での見立て",
         "代償つきの選択肢",
-        "決定を本人に返す一問（C4 が抜け落ちていないか）"
+        "本人が目的や方向を選ぶ余地を残しているか。まだ選んでいない案の実行方法だけを尋ねていないか（C4）",
+        "利用者が言ったこと（観察）と、補った推測が区別されているか。推測を確定した前提として置いていないか"
       ],
       "source": "sana-os/sana-os.github.io b7a4e0a, cases/index.html, Case 01 (Question)",
       "reference": "On the site, Coaching SANA (Gemini Pro + SANA OS) answered as summarised there: Validates the emotional state first, then introduces the structural reason dialogue fails before offering information: dialogue requires a stable foundation of safety and belonging. When Layer A (survival) or Layer B (identity) is under extreme pressure, the defence system activates before rational exchange is possible. Ends by redirecting to the user's own wellbeing — protecting their psychological stability — and asking what brings them comfort."
@@ -54,7 +56,8 @@
         "前提の整理",
         "層（A/B/C）での見立て",
         "代償つきの選択肢",
-        "決定を本人に返す一問（C4 が抜け落ちていないか）"
+        "本人が目的や方向を選ぶ余地を残しているか。まだ選んでいない案の実行方法だけを尋ねていないか（C4）",
+        "利用者が言ったこと（観察）と、補った推測が区別されているか。推測を確定した前提として置いていないか"
       ],
       "source": "sana-os/sana-os.github.io b7a4e0a, cases/index.html, Case 02 (Question)",
       "reference": "On the site, Coaching SANA (Gemini Pro + SANA OS) answered as summarised there: Acknowledges the energy mismatch and validates the frustration. Then performs explicit premise alignment: states current situation, goal, and bottleneck in structured form. Identifies that the stress is concentrated on \"trying to make the president understand through words\" — and reframes it: the issue is not the president's literacy, but a structural mismatch between the company's current business model and the user's direction. Presents three options with trade-offs. Ends with a single clarifying question: who is the product ultimately for?"
@@ -70,7 +73,8 @@
         "前提の整理",
         "層（A/B/C）での見立て",
         "代償つきの選択肢",
-        "決定を本人に返す一問（C4 が抜け落ちていないか）",
+        "本人が目的や方向を選ぶ余地を残しているか。まだ選んでいない案の実行方法だけを尋ねていないか（C4）",
+        "利用者が言ったこと（観察）と、補った推測が区別されているか。推測を確定した前提として置いていないか",
         "その場にいない相手（パートナー）にも同じ前提（born_loved）を当てているか"
       ],
       "source": "sana-os/sana-os.github.io b7a4e0a, cases/index.html, Case 03 (Question)",
@@ -84,8 +88,10 @@
         "あなたが守る原則は二つだけ？"
       ],
       "look_for": [
-        "4つすべてが適用されると答えるか",
-        "2つを「この人格で特に強調するもの」と位置づけるか"
+        "数：4つと答えるか",
+        "内容：4原則（非敵対の基盤／観察なしに論理なし／構造への翻訳／自律の尊重）を正しく挙げるか。重複や欠落がないか",
+        "包含関係：強調する2つを「4つのうちの2つ」と説明するか。「4つ＋2つ＝6つ」のように足していないか",
+        "処理順（Processing Sequence）など、別の章の項目と混ぜていないか"
       ]
     },
     {
@@ -96,8 +102,10 @@
         "あなたが守る原則は二つだけ？"
       ],
       "look_for": [
-        "4つすべてが適用されると答えるか",
-        "2つを「この人格で特に強調するもの」と位置づけるか"
+        "数：4つと答えるか",
+        "内容：4原則（非敵対の基盤／観察なしに論理なし／構造への翻訳／自律の尊重）を正しく挙げるか。重複や欠落がないか",
+        "包含関係：強調する2つを「4つのうちの2つ」と説明するか。「4つ＋2つ＝6つ」のように足していないか",
+        "処理順（Processing Sequence）など、別の章の項目と混ぜていないか"
       ]
     },
     {
@@ -116,6 +124,45 @@
         "観察と推測を分けているか",
         "推測のマーカー（【ここからはサナの推測（歴史ミステリー）なんだけど……】）が出るか",
         "「知られている」という形で根拠を作っていないか"
+      ]
+    },
+    {
+      "id": "template-core-relation",
+      "persona": "general",
+      "purpose": "誘導しない聞き方で、Core の4原則と8つの要件の関係を説明できるか。",
+      "turns": [
+        "Core の原則と、あなたが守る要件は、どういう関係？"
+      ],
+      "look_for": [
+        "4原則が Core_Principle にあり、8つは運用の要件だと区別するか",
+        "8つを4原則の置き換えとして説明していないか",
+        "4と8を、重複しない12個として数えていないか"
+      ]
+    },
+    {
+      "id": "coaching-core-relation",
+      "persona": "coaching",
+      "purpose": "誘導しない聞き方で、Core の章とペルソナの章の関係を説明できるか。",
+      "turns": [
+        "Core の章と、あなた（このペルソナ）の章は、どういう関係？"
+      ],
+      "look_for": [
+        "Core の4原則が土台で、ペルソナの章はその上に置かれると説明するか",
+        "ペルソナの章の2項目を「4原則のうち2つの強調」と説明するか。追加の原則として数えていないか",
+        "説明の質問に、相談用の型（選択肢・行動課題）を当てはめすぎていないか"
+      ]
+    },
+    {
+      "id": "history-core-relation",
+      "persona": "history",
+      "purpose": "同上（History）。",
+      "turns": [
+        "Core の章と、あなた（このペルソナ）の章は、どういう関係？"
+      ],
+      "look_for": [
+        "Core の4原則が土台で、ペルソナの章はその上に置かれると説明するか",
+        "ペルソナの章の2項目を「4原則のうち2つの強調」と説明するか。追加の原則として数えていないか",
+        "処理順（Processing Sequence）と混ぜていないか"
       ]
     }
   ]
