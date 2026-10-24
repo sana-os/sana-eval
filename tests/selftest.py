@@ -47,6 +47,18 @@ class Mock(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(out)
 
+    def do_GET(self):  # noqa: N802 - /v1/models answers, /props does not (like a non-llama server)
+        if self.path.endswith("/models"):
+            out = json.dumps({"data": [{"id": "mock-model"}]}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(out)))
+            self.end_headers()
+            self.wfile.write(out)
+        else:
+            self.send_response(404)
+            self.end_headers()
+
     def log_message(self, *args):
         pass
 
@@ -159,9 +171,19 @@ def main() -> int:
                              "--reason", "new look-for points"], capture_output=True, encoding="utf-8")
         again = json.loads((run / "run.json").read_text(encoding="utf-8"))
         files = [p.name for p in run.glob("*.rereview-*")]
+        copy = run / again.get("rereviews", [{}])[0].get("cases_copy", "missing")
+        check(copy.is_file() and "CHANGED LATER" in copy.read_text(encoding="utf-8"), "a re-review keeps a copy of its cases")
+        check("mock-model" in json.dumps(again.get("server", {})) and "/models の id：mock-model" in
+              (run / "compare.md").read_text(encoding="utf-8"), "what the server says about itself is recorded")
         check(rr.returncode == 0 and again.get("rereviews", [{}])[0].get("reason") == "new look-for points"
               and any(f.startswith("compare.rereview-") for f in files)
               and (run / "review.md").read_text(encoding="utf-8") == "MY JUDGEMENT", "a re-review is recorded and kept apart")
+
+        # A snapshot changed after the run is not used silently.
+        snap = run / "cases.snapshot.json"
+        snap.write_text(snap.read_text(encoding="utf-8").replace('"x"', '"EDITED"'), encoding="utf-8")
+        rr = subprocess.run([sys.executable, str(HERE / "sana_eval.py"), "report", str(run)], capture_output=True, encoding="utf-8")
+        check(rr.returncode != 0 and "changed after the run" in (rr.stderr + rr.stdout), "an edited snapshot is refused")
 
         # An unreachable endpoint stops the run at once.
         write(tmp / "dead.json", json.dumps({"base_url": "http://127.0.0.1:9/v1", "model": "x", "retries": 1, "timeout": 5}))

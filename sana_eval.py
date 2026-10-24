@@ -157,6 +157,28 @@ def public_config(cfg: dict) -> dict:
     return out
 
 
+def server_info(cfg: dict) -> dict:
+    """What the server says about itself, best effort: /v1/models (any OpenAI-compatible
+    server) and, for llama-server, /props (model file, context size, build, chat template).
+    Why: the model name in the request does not identify the weights, quantisation or
+    server settings that answered, and replies to the same prompt and seed can differ
+    between runs; this is what can be recorded to look into such differences."""
+    headers = {"Authorization": f"Bearer {api_key(cfg)}"} if api_key(cfg) else {}
+    base = cfg["base_url"].rstrip("/")
+    info: dict = {}
+    for key, url in (("models", base + "/models"), ("props", re.sub(r"/v1$", "", base) + "/props")):
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                info[key] = json.loads(resp.read().decode("utf-8"))
+        except Exception as e:  # noqa: BLE001 - recorded, not fatal
+            info[key] = {"unavailable": f"{type(e).__name__}: {e}"}
+    props = info.get("props", {})
+    if isinstance(props.get("chat_template"), str):  # long; the hash identifies it
+        props["chat_template_sha256"] = sha256(props.pop("chat_template"))
+    return info
+
+
 def chat(cfg: dict, messages: list[dict], seed: int | None) -> dict:
     body = {"model": cfg["model"], "messages": messages, **cfg.get("params", {})}
     if seed is not None:
@@ -309,7 +331,7 @@ def cmd_run(args) -> int:
         "harness": harness_version(), "sana_os": str(repo), "variants": variants,
         "prompts": {v: {p: {k: x[k] for k in ("files", "sha256", "chars")} for p, x in ps.items()}
                     for v, ps in prompts.items()},
-        "endpoint": public_config(cfg), "repeat": repeat,
+        "endpoint": public_config(cfg), "server": server_info(cfg), "repeat": repeat,
         "cases_file": {"path": os.path.relpath(cases_path, HERE), "sha256": sha256(cases_path.read_text(encoding="utf-8"))},
         "skipped": skipped,
     }
@@ -366,7 +388,11 @@ def run_cases(out: Path, run: dict) -> dict:
     existed, the cases file only if it still has the recorded hash."""
     snap = out / "cases.snapshot.json"
     if snap.is_file():
-        return json.loads(snap.read_text(encoding="utf-8"))
+        text = snap.read_text(encoding="utf-8")
+        if sha256(text) != run["cases_file"]["sha256"]:
+            raise SystemExit(f"{snap} does not have the hash recorded in run.json; it was changed after the run. "
+                             "Restore it, or read the run with --cases and --reason (a re-review).")
+        return json.loads(text)
     path = HERE / run["cases_file"]["path"]
     if path.is_file() and sha256(path.read_text(encoding="utf-8")) == run["cases_file"]["sha256"]:
         snap.write_bytes(path.read_bytes())  # unchanged since the run: keep that state from now on
@@ -404,6 +430,16 @@ def report(out: Path, cases: dict | None = None, rereview: dict | None = None) -
             f"extra_body `{json.dumps(run['endpoint'].get('extra_body', {}), ensure_ascii=False)}`",
             f"- 繰り返し {run['repeat']} 回（同じ回数目は同じ seed）",
             "- 比較するもの："]
+    server = run.get("server", {})
+    props = server.get("props", {})
+    if props and "unavailable" not in props:
+        dgs = props.get("default_generation_settings", {})
+        head.append(f"- サーバー：model_path `{props.get('model_path')}`　n_ctx `{dgs.get('n_ctx', props.get('n_ctx'))}`　"
+                    f"slots `{props.get('total_slots')}`　build `{props.get('build_info')}`　"
+                    f"chat_template sha256 `{str(props.get('chat_template_sha256', ''))[:16]}`")
+    elif server:
+        ids = [m.get("id") for m in server.get("models", {}).get("data", []) if isinstance(m, dict)]
+        head.append(f"- サーバー：/props は取得できず。/models の id：{', '.join(map(str, ids)) or '取得できず'}")
     for v, info in run["variants"].items():
         head.append(f"  - **{v}** = `{info['ref']}` `{info['commit'][:12]}` {info['subject']}")
     for v, ps in run["prompts"].items():
@@ -477,12 +513,15 @@ def cmd_report(args) -> int:
         now = datetime.now(timezone.utc)
         rr = {"at": now.isoformat(timespec="seconds"), "stamp": now.strftime("%Y%m%d-%H%M%SZ"),
               "cases_path": str(path), "sha256": sha256(path.read_text(encoding="utf-8")), "reason": args.reason}
+        # Keep the look-for points of this re-review with the run, as they were read.
+        rr["cases_copy"] = f"cases.rereview-{rr['stamp']}.json"
+        (out / rr["cases_copy"]).write_bytes(path.read_bytes())
         run = json.loads((out / "run.json").read_text(encoding="utf-8"))
         run.setdefault("rereviews", []).append(rr)
         write_json(out / "run.json", run)
         report(out, json.loads(path.read_text(encoding="utf-8")), rereview=rr)
-        print(f"Re-review written: compare.rereview-{rr['stamp']}.md, review.rereview-{rr['stamp']}.md "
-              "(recorded in run.json)")
+        print(f"Re-review written: compare.rereview-{rr['stamp']}.md, review.rereview-{rr['stamp']}.md, "
+              f"{rr['cases_copy']} (recorded in run.json)")
         return 0
     report(out)
     print(f"Rewritten: {out}/compare.md, review.template.md (review.md is kept as it is)")
