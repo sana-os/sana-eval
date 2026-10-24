@@ -10,6 +10,10 @@ Checks the parts a wrong result would be hardest to notice in:
   * multi-turn: the assistant's reply is sent back in the next request
   * a case with a TODO placeholder is skipped and listed
   * the API key is never written to the run folder
+  * a filled-in review.md survives `report`; reports use the cases snapshot, not a later edit;
+    a re-review needs a reason and goes to separate files
+  * a reply cut at max_tokens is flagged
+  * an unreachable endpoint stops the run at the first request
 Standard library only.
 """
 from __future__ import annotations
@@ -34,7 +38,8 @@ class Mock(BaseHTTPRequestHandler):
         system = body["messages"][0]["content"]
         last = body["messages"][-1]["content"]
         reply = f"echo seed={body.get('seed')} sys={system[:12]!r} turn={len(body['messages']) // 2} last={last}"
-        out = json.dumps({"model": body["model"], "choices": [{"message": {"content": reply}, "finish_reason": "stop"}],
+        finish = "length" if "LONG" in str(last) else "stop"
+        out = json.dumps({"model": body["model"], "choices": [{"message": {"content": reply}, "finish_reason": finish}],
                           "usage": {"prompt_tokens": 1, "completion_tokens": 1}}).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -97,7 +102,7 @@ def main() -> int:
         write(tmp / "fx.md", "## 2. CUSTOM\nmine\n\n## 3. UI\nmine too\n")
         cases = {"repeat": 2, "personas": {"t": {"base": "template", "sections": "fx.md", "frameworks": ["frameworks/F.md"]}},
                  "cases": [{"id": "c1", "persona": "coaching", "turns": ["一つ目", "二つ目"], "look_for": ["x"]},
-                           {"id": "t1", "persona": "t", "turns": ["hello"], "look_for": ["y"]},
+                           {"id": "t1", "persona": "t", "turns": ["hello LONG"], "look_for": ["y"]},
                            {"id": "todo", "persona": "coaching", "turns": ["TODO: paste"], "look_for": []}]}
         write(tmp / "cases.json", json.dumps(cases, ensure_ascii=False))
         write(tmp / "config.json", json.dumps({"base_url": f"http://127.0.0.1:{server.server_port}/v1",
@@ -135,7 +140,39 @@ def main() -> int:
         check(len(REQUESTS) == (2 + 1) * 2 * 2, "number of requests: (2 turns + 1 turn) x 2 reps x 2 variants")
         compare = (run / "compare.md").read_text(encoding="utf-8")
         check("### 2 回目 — after" in compare and "二つ目" in compare, "compare.md lists every repetition and turn")
-        check((run / "review.md").is_file(), "review.md written")
+        check((run / "review.md").is_file() and (run / "review.template.md").is_file(), "review.md and template written")
+        check("**max_tokens で途中で切れています**" in compare and "t1/before-1" in compare, "a reply cut at max_tokens is flagged")
+        check((run / "cases.snapshot.json").read_bytes() == (tmp / "cases.json").read_bytes(), "cases snapshot saved")
+
+        # A filled-in review survives; a later edit of the cases file does not leak into reports.
+        (run / "review.md").write_text("MY JUDGEMENT", encoding="utf-8")
+        cases["cases"][0]["look_for"] = ["CHANGED LATER"]
+        write(tmp / "cases.json", json.dumps(cases, ensure_ascii=False))
+        rr = subprocess.run([sys.executable, str(HERE / "sana_eval.py"), "report", str(run)], capture_output=True, encoding="utf-8")
+        check(rr.returncode == 0 and (run / "review.md").read_text(encoding="utf-8") == "MY JUDGEMENT",
+              "report does not overwrite a filled-in review.md")
+        check("CHANGED LATER" not in (run / "compare.md").read_text(encoding="utf-8"), "report uses the snapshot, not the edited cases")
+        rr = subprocess.run([sys.executable, str(HERE / "sana_eval.py"), "report", str(run), "--cases", str(tmp / "cases.json")],
+                            capture_output=True, encoding="utf-8")
+        check(rr.returncode != 0, "a re-review without --reason is refused")
+        rr = subprocess.run([sys.executable, str(HERE / "sana_eval.py"), "report", str(run), "--cases", str(tmp / "cases.json"),
+                             "--reason", "new look-for points"], capture_output=True, encoding="utf-8")
+        again = json.loads((run / "run.json").read_text(encoding="utf-8"))
+        files = [p.name for p in run.glob("*.rereview-*")]
+        check(rr.returncode == 0 and again.get("rereviews", [{}])[0].get("reason") == "new look-for points"
+              and any(f.startswith("compare.rereview-") for f in files)
+              and (run / "review.md").read_text(encoding="utf-8") == "MY JUDGEMENT", "a re-review is recorded and kept apart")
+
+        # An unreachable endpoint stops the run at once.
+        write(tmp / "dead.json", json.dumps({"base_url": "http://127.0.0.1:9/v1", "model": "x", "retries": 1, "timeout": 5}))
+        dead = cmd[:]
+        dead[dead.index("--config") + 1] = str(tmp / "dead.json")
+        dead[dead.index("--label") + 1] = "dead"
+        rd = subprocess.run(dead, capture_output=True, encoding="utf-8")
+        druns = list((tmp / "runs").glob("*_dead"))
+        meta = json.loads((druns[0] / "run.json").read_text(encoding="utf-8")) if druns else {}
+        check(rd.returncode == 1 and "aborted" in meta and len(list(druns[0].rglob("transcripts/*/*.json"))) == 1,
+              "an unreachable endpoint stops the run at the first request")
     server.shutdown()
     print("\n" + ("All checks passed." if not failures else f"{len(failures)} check(s) failed."))
     return 1 if failures else 0

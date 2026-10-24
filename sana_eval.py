@@ -5,7 +5,8 @@
     python sana_eval.py run --sana-os ../sana-os --variant before=main --variant after=t7/scope \\
         --cases cases/pr4-t7.json --config config.json --label pr4
     python sana_eval.py run ... --dry-run          # compose and list the calls, send nothing
-    python sana_eval.py report runs/<run>          # rebuild compare.md and review.md
+    python sana_eval.py report runs/<run>          # rebuild compare.md and review.template.md
+    python sana_eval.py report runs/<run> --cases cases/x.json --reason "..."   # re-review, new look-for
 
 What it does, and why each part is there:
   * Composes each persona exactly as personas/README.md "Reference composition" says
@@ -16,8 +17,16 @@ What it does, and why each part is there:
     seed + i for every variant, so before and after are paired.
   * Records everything needed to repeat or question a result: the commits, the composed
     prompt and its hash, the endpoint settings (without the key), every request and reply.
-  * Writes compare.md (variants side by side) and review.md (what to look at, per case).
+  * Writes compare.md (variants side by side, with finish reason and token counts) and
+    review.template.md (what to look at, per case). review.md is created once, as a copy of
+    the template, for the reader to fill in; no later command overwrites it.
     It does not judge. Judging is a separate role: the author, or a reviewer.
+  * Keeps the cases file as it was at run time (cases.snapshot.json), so a report always
+    shows the look-for points the run was made with. Reading a run against changed
+    look-for points is a re-review: it needs a reason, is recorded in run.json, and goes
+    to separate files.
+  * Stops when the endpoint cannot be reached: at the first request, or after three
+    failures in a row, instead of trying every remaining request.
 Standard library only; Python 3.9+.
 """
 from __future__ import annotations
@@ -305,37 +314,71 @@ def cmd_run(args) -> int:
         "skipped": skipped,
     }
     write_json(out / "run.json", run)
+    # The cases exactly as run: reports are built from this copy, never from a later edit.
+    (out / "cases.snapshot.json").write_bytes(cases_path.read_bytes())
 
     seed0 = cfg.get("seed")
-    for c in runnable:
-        for rep in range(1, repeat + 1):
-            for vname in variants:  # interleaved, so drift on the server affects every variant alike
-                messages = [{"role": "system", "content": prompts[vname][c["persona"]]["text"]}]
-                record = {"case": c["id"], "variant": vname, "rep": rep,
-                          "seed": None if seed0 is None else seed0 + rep, "turns": []}
-                for turn in c["turns"]:
-                    messages.append(user_message(turn, base_dir))
-                    reply = chat(cfg, messages, record["seed"])
-                    record["turns"].append({"user": turn_text(turn), **reply})
-                    if "error" in reply:
-                        break
-                    messages.append({"role": "assistant", "content": reply["content"]})
-                write_json(out / "transcripts" / c["id"] / f"{vname}-{rep}.json", record)
-                status = "error: " + record["turns"][-1]["error"] if "error" in record["turns"][-1] else "ok"
-                print(f"  {c['id']:<28} {vname:<8} rep {rep}  {status}")
+    succeeded, failed_in_row = 0, 0
+    try:
+        for c in runnable:
+            for rep in range(1, repeat + 1):
+                for vname in variants:  # interleaved, so drift on the server affects every variant alike
+                    messages = [{"role": "system", "content": prompts[vname][c["persona"]]["text"]}]
+                    record = {"case": c["id"], "variant": vname, "rep": rep,
+                              "seed": None if seed0 is None else seed0 + rep, "turns": []}
+                    for turn in c["turns"]:
+                        messages.append(user_message(turn, base_dir))
+                        reply = chat(cfg, messages, record["seed"])
+                        record["turns"].append({"user": turn_text(turn), **reply})
+                        if "error" in reply:
+                            break
+                        messages.append({"role": "assistant", "content": reply["content"]})
+                    write_json(out / "transcripts" / c["id"] / f"{vname}-{rep}.json", record)
+                    last = record["turns"][-1]
+                    if "error" in last:
+                        failed_in_row += 1
+                        status = "error: " + last["error"]
+                    else:
+                        succeeded, failed_in_row = succeeded + 1, 0
+                        status = "ok" if last.get("finish_reason") != "length" else "ok (cut at max_tokens)"
+                    print(f"  {c['id']:<28} {vname:<8} rep {rep}  {status}")
+                    if failed_in_row and (succeeded == 0 or failed_in_row >= 3):
+                        raise Abort(last["error"])
+    except Abort as e:
+        run["aborted"] = f"stopped: {'the first request failed' if succeeded == 0 else 'three failures in a row'} ({e})"
+        print(f"\nStopped. {run['aborted']}\nCheck base_url and the server in {args.config}, then run again.")
     run["ended"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     write_json(out / "run.json", run)
-    report(out, cases)
-    print(f"\nWritten: {out}\n  compare.md — variants side by side\n  review.md  — what to look at, to fill in")
-    return 0
+    report(out)
+    print(f"\nWritten: {out}\n  compare.md          — variants side by side\n"
+          f"  review.md           — what to look at, to fill in (never overwritten)")
+    return 1 if "aborted" in run else 0
+
+
+class Abort(Exception):
+    pass
 
 
 # ---------------------------------------------------------------- report
 
-def report(out: Path, cases: dict | None = None) -> None:
+def run_cases(out: Path, run: dict) -> dict:
+    """The cases the run was made with: the snapshot, or, for runs made before snapshots
+    existed, the cases file only if it still has the recorded hash."""
+    snap = out / "cases.snapshot.json"
+    if snap.is_file():
+        return json.loads(snap.read_text(encoding="utf-8"))
+    path = HERE / run["cases_file"]["path"]
+    if path.is_file() and sha256(path.read_text(encoding="utf-8")) == run["cases_file"]["sha256"]:
+        snap.write_bytes(path.read_bytes())  # unchanged since the run: keep that state from now on
+        return json.loads(path.read_text(encoding="utf-8"))
+    raise SystemExit(f"{out} has no cases.snapshot.json, and {path} has changed since the run. "
+                     "To read the run with the current cases, use --cases and --reason (a re-review).")
+
+
+def report(out: Path, cases: dict | None = None, rereview: dict | None = None) -> None:
     run = json.loads((out / "run.json").read_text(encoding="utf-8"))
     if cases is None:
-        cases = json.loads((HERE / run["cases_file"]["path"]).read_text(encoding="utf-8"))
+        cases = run_cases(out, run)
     variants = list(run["variants"])
     head = [f"# {run['label']}", "",
             f"- 開始 {run['started']}　終了 {run.get('ended', '（未完了）')}　ハーネス `{run['harness']}`",
@@ -352,6 +395,14 @@ def report(out: Path, cases: dict | None = None) -> None:
             head.append(f"  - {v} / {p}: {x['chars']:,} 文字, sha256 `{x['sha256'][:16]}`")
     if run.get("skipped"):
         head.append("- 実行しなかったケース（入力が未記入）：" + ", ".join(run["skipped"]))
+    if run.get("aborted"):
+        head.append(f"- **途中で止まった実行**：{run['aborted']}")
+    cut = [f"{p.parent.name}/{p.stem}" for p in sorted((out / "transcripts").rglob("*.json"))
+           if any(t.get("finish_reason") == "length" for t in json.loads(p.read_text(encoding="utf-8"))["turns"])]
+    head.append("- max_tokens で途中で切れた応答：" + (", ".join(cut) if cut else "なし"))
+    if rereview:
+        head.append(f"- **再レビュー**（実行時とは別の「見る点」で読む）：{rereview['at']}　ケース `{rereview['cases_path']}` "
+                    f"sha256 `{rereview['sha256'][:16]}`　理由：{rereview['reason']}")
     head.append("")
 
     compare, review = list(head), list(head)
@@ -382,17 +433,43 @@ def report(out: Path, cases: dict | None = None) -> None:
                     compare += ["> " + line for line in t["user"].splitlines()] + [""]
                     compare.append(t.get("content") or f"**エラー** {t.get('error')}")
                     compare.append("")
+                    if "error" not in t:
+                        u = t.get("usage") or {}
+                        flag = "　**max_tokens で途中で切れています**" if t.get("finish_reason") == "length" else ""
+                        compare += [f"<sub>finish_reason {t.get('finish_reason')}　prompt {u.get('prompt_tokens')}・"
+                                    f"completion {u.get('completion_tokens')} tokens　model {t.get('model_reported')}　"
+                                    f"{t.get('seconds')} s</sub>{flag}", ""]
             review.append(f"- {rep} 回目：" + "　".join(f"{v} [ ]" for v in variants) + "　気づいた差：")
         review += ["", "**まとめ**（変更前後で何が変わったか／変わらなかったか）：", "", "---", ""]
         compare += ["---", ""]
-    for name, lines in (("compare.md", compare), ("review.md", review)):
+    suffix = "" if rereview is None else f".rereview-{rereview['stamp']}"
+    for name, lines in ((f"compare{suffix}.md", compare), (f"review{suffix}.template.md", review)):
         with open(out / name, "w", encoding="utf-8", newline="\n") as fh:
             fh.write("\n".join(lines).rstrip("\n") + "\n")
+    # The sheet the reader fills in is created once and never overwritten.
+    filled = out / f"review{suffix}.md"
+    if not filled.exists():
+        filled.write_bytes((out / f"review{suffix}.template.md").read_bytes())
 
 
 def cmd_report(args) -> int:
-    report(Path(args.run))
-    print(f"Rewritten: {args.run}/compare.md, review.md")
+    out = Path(args.run)
+    if args.cases:
+        if not args.reason:
+            raise SystemExit("--cases makes this a re-review with other look-for points; give --reason")
+        path = Path(args.cases)
+        now = datetime.now(timezone.utc)
+        rr = {"at": now.isoformat(timespec="seconds"), "stamp": now.strftime("%Y%m%d-%H%M%SZ"),
+              "cases_path": str(path), "sha256": sha256(path.read_text(encoding="utf-8")), "reason": args.reason}
+        run = json.loads((out / "run.json").read_text(encoding="utf-8"))
+        run.setdefault("rereviews", []).append(rr)
+        write_json(out / "run.json", run)
+        report(out, json.loads(path.read_text(encoding="utf-8")), rereview=rr)
+        print(f"Re-review written: compare.rereview-{rr['stamp']}.md, review.rereview-{rr['stamp']}.md "
+              "(recorded in run.json)")
+        return 0
+    report(out)
+    print(f"Rewritten: {out}/compare.md, review.template.md (review.md is kept as it is)")
     return 0
 
 
@@ -417,8 +494,10 @@ def main() -> int:
     r.add_argument("--out", help="parent folder for the run (default: runs/)")
     r.add_argument("--dry-run", action="store_true")
     r.set_defaults(func=cmd_run)
-    p = sub.add_parser("report", help="rewrite compare.md and review.md of a run")
+    p = sub.add_parser("report", help="rewrite compare.md and review.template.md of a run")
     p.add_argument("run")
+    p.add_argument("--cases", help="read the run against another cases file (a re-review)")
+    p.add_argument("--reason", help="why the run is read with other look-for points (required with --cases)")
     p.set_defaults(func=cmd_report)
     args = ap.parse_args()
     if args.cmd == "run" and not args.dry_run and not args.config:
