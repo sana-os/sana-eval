@@ -82,7 +82,7 @@ python sana_eval.py run --sana-os D:\GitHub\sana-os `
 | ファイル | 比べるもの | 中身 |
 |---|---|---|
 | `pr3-wording.json` | before=`main`（PR2 の後）、after=`wording/invariant-headings` | 見出しの変更で、要件の強さや4原則の扱いの受け取り方が変わらないか |
-| `pr4-t7.json` | before=`wording/invariant-headings`、after=`t7/scope` | T7 の適用範囲の変更で、期待どおりに変わるか（聞いてほしいだけのとき、断られたとき、求められたとき、繰り返される依頼、安全フロー） |
+| `pr4-t7.json` | before=`main`（文面の変更を merge した後）、after=`t7/scope` | T7 の適用範囲の変更で、期待どおりに変わるか（聞いてほしいだけのとき、断られたとき、断ったあと同じ話題に戻るとき、求められたとき、断られたあとの訂正、繰り返される依頼、安全フロー）。T7 の文面が届くのは Template から作るペルソナだけで、Coaching と History のケースの多くは対照 |
 
 ```json
 {
