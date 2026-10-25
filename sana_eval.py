@@ -428,8 +428,7 @@ def report(out: Path, cases: dict | None = None, rereview: dict | None = None) -
             f"設定 `{json.dumps(run['endpoint'].get('params', {}), ensure_ascii=False)}`　"
             f"seed `{run['endpoint'].get('seed')}`+回数　"
             f"extra_body `{json.dumps(run['endpoint'].get('extra_body', {}), ensure_ascii=False)}`",
-            f"- 繰り返し {run['repeat']} 回（同じ回数目は同じ seed）",
-            "- 比較するもの："]
+            f"- 繰り返し {run['repeat']} 回（同じ回数目は同じ seed）"]
     server = run.get("server", {})
     props = server.get("props", {})
     if props and "unavailable" not in props:
@@ -440,6 +439,7 @@ def report(out: Path, cases: dict | None = None, rereview: dict | None = None) -
     elif server:
         ids = [m.get("id") for m in server.get("models", {}).get("data", []) if isinstance(m, dict)]
         head.append(f"- サーバー：/props は取得できず。/models の id：{', '.join(map(str, ids)) or '取得できず'}")
+    head.append("- 比較するもの：")  # after the server line, so the variants stay its sub-items
     for v, info in run["variants"].items():
         head.append(f"  - **{v}** = `{info['ref']}` `{info['commit'][:12]}` {info['subject']}")
     for v, ps in run["prompts"].items():

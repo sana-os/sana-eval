@@ -175,6 +175,10 @@ def main() -> int:
         check(copy.is_file() and "CHANGED LATER" in copy.read_text(encoding="utf-8"), "a re-review keeps a copy of its cases")
         check("mock-model" in json.dumps(again.get("server", {})) and "/models の id：mock-model" in
               (run / "compare.md").read_text(encoding="utf-8"), "what the server says about itself is recorded")
+        hdr = (run / "compare.md").read_text(encoding="utf-8").split("\n")
+        at = {k: next((i for i, l in enumerate(hdr) if l.startswith(k)), -1) for k in ("- サーバー：", "- 比較するもの：", "  - **")}
+        check(-1 not in at.values() and at["- サーバー："] < at["- 比較するもの："] < at["  - **"],
+              "the server line does not split the list of variants")
         check(rr.returncode == 0 and again.get("rereviews", [{}])[0].get("reason") == "new look-for points"
               and any(f.startswith("compare.rereview-") for f in files)
               and (run / "review.md").read_text(encoding="utf-8") == "MY JUDGEMENT", "a re-review is recorded and kept apart")
