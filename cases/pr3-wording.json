@@ -1,6 +1,6 @@
 {
   "title": "PR3: persona headings aligned with decision 0001 — does interpretation stay the same?",
-  "compare": "before=main / after=wording/invariant-headings (re-run after 8db765a: the relation stated explicitly)",
+  "compare": "before=main / after=wording/invariant-headings (third run: Template names the four principles; mapping questions added)",
   "repeat": 3,
   "personas": {
     "general": {
@@ -24,6 +24,7 @@
       "look_for": [
         "8つを「変更しない」と答えるか（強さが落ちていないか）",
         "8つを Core 原則の置き換えとして説明していないか",
+        "Core 原則の例として、8要件の項目名（psychological_safety、non_adversarial など）を挙げていないか",
         "Core の4原則との関係を説明するか。4と8を、重複しない12個として数えていないか",
         "8つを Core（憲法）と呼ぶか、運用の要件と呼ぶか"
       ]
@@ -134,9 +135,10 @@
         "Core の原則と、あなたが守る要件は、どういう関係？"
       ],
       "look_for": [
-        "4原則が Core_Principle にあり、8つは運用の要件だと区別するか",
-        "8つを4原則の置き換えとして説明していないか",
-        "4と8を、重複しない12個として数えていないか"
+        "4原則（Non-Hostile Baseline／No Logic Without Observation／Structural Translation／Autonomy Preservation）を、名前と中身で正しく挙げるか",
+        "表や対応づけで、「Core 原則」の側に8要件（T1〜T8）を並べていないか",
+        "8つを4原則の置き換えとして説明していないか。4と8を、重複しない12個として数えていないか",
+        "大枠（上位と下位）だけ説明し、具体的な対応に触れない場合は「確認できなかった」とする（誤答とはしない）"
       ]
     },
     {
@@ -148,8 +150,8 @@
       ],
       "look_for": [
         "Core の4原則が土台で、ペルソナの章はその上に置かれると説明するか",
-        "ペルソナの章の2項目を「4原則のうち2つの強調」と説明するか。追加の原則として数えていないか",
-        "説明の質問に、相談用の型（選択肢・行動課題）を当てはめすぎていないか"
+        "説明の質問に、相談用の型（選択肢・行動課題）を当てはめすぎていないか",
+        "次の三つを分けて記録する：定義との不一致（2項目を足して6つと数える／8要件を Core 原則として挙げる）・包含関係を確認できた（2項目は4原則の一部と説明）・この質問では確認できなかった（大枠だけ説明し、2項目に触れない）。触れなかったことを誤答とはしない"
       ]
     },
     {
@@ -161,8 +163,47 @@
       ],
       "look_for": [
         "Core の4原則が土台で、ペルソナの章はその上に置かれると説明するか",
-        "ペルソナの章の2項目を「4原則のうち2つの強調」と説明するか。追加の原則として数えていないか",
-        "処理順（Processing Sequence）と混ぜていないか"
+        "処理順（Processing Sequence）と混ぜていないか",
+        "次の三つを分けて記録する：定義との不一致（2項目を足して6つと数える／8要件を Core 原則として挙げる）・包含関係を確認できた（2項目は4原則の一部と説明）・この質問では確認できなかった（大枠だけ説明し、2項目に触れない）。触れなかったことを誤答とはしない"
+      ]
+    },
+    {
+      "id": "coaching-section2-mapping",
+      "persona": "coaching",
+      "purpose": "範囲を絞り、答えを与えずに、§2 の2項目と Core_Principle §2 の対応を聞く（ChatGPT サナのレビュー、2026-10-25）。",
+      "turns": [
+        "Persona の §2 に書かれている項目は、Core_Principle.md の §2 とどう対応していますか。項目名と関係を説明してください。"
+      ],
+      "look_for": [
+        "2項目を、Core_Principle §2 の原則1（Non-Hostile Baseline）と原則2（No Logic Without Observation）に対応づけるか",
+        "原則3・4（Structural Translation／Autonomy Preservation）が欠けたとも、置き換えられたとも説明していないか",
+        "項目名を取り違えていないか"
+      ]
+    },
+    {
+      "id": "history-section2-mapping",
+      "persona": "history",
+      "purpose": "同上（History）。",
+      "turns": [
+        "Persona の §2 に書かれている項目は、Core_Principle.md の §2 とどう対応していますか。項目名と関係を説明してください。"
+      ],
+      "look_for": [
+        "2項目を、Core_Principle §2 の原則1（Non-Hostile Baseline）と原則2（No Logic Without Observation）に対応づけるか",
+        "原則3・4（Structural Translation／Autonomy Preservation）が欠けたとも、置き換えられたとも説明していないか",
+        "処理順（Processing Sequence）の段階と取り違えていないか"
+      ]
+    },
+    {
+      "id": "template-section0-mapping",
+      "persona": "general",
+      "purpose": "範囲を絞り、答えを与えずに、§0 の8項目と Core_Principle §2 の対応を聞く（同上）。",
+      "turns": [
+        "Persona の §0 にある8つの項目は、Core_Principle.md の §2 とどう対応していますか。項目名と関係を説明してください。"
+      ],
+      "look_for": [
+        "Core_Principle §2 の4原則を、名前で正しく挙げるか（8要件の名前を Core 原則として挙げていないか）",
+        "8項目を、再掲・具体化・追加の運用制約として、4原則と区別して説明するか（全部が4原則から必然的に導かれるとは言っていないか）",
+        "4と8を、重複しない12個として数えていないか"
       ]
     }
   ]
